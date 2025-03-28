@@ -4,9 +4,6 @@
 This header file provides a complete implementation of a stack data structure using a linked list approach. The implementation includes all basic stack operations plus additional utility functions.
 
 **File:** `stack.h`  
-**Author:** [Your Name]  
-**Date:** [Current Date]  
-**Version:** 1.0
 
 ## Data Structures
 
