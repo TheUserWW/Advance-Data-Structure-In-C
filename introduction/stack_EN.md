@@ -1,220 +1,154 @@
-# Stack Library Documentation
-
-This document provides detailed documentation for the dynamic stack implementation with swap capability. Each function includes an example demonstrating its usage.
+# Stack Data Structure Documentation
 
 ## Overview
+This header file provides a complete implementation of a stack data structure using a linked list approach. The implementation includes all basic stack operations plus additional utility functions.
 
-The stack is a Last-In-First-Out (LIFO) data structure implemented using a dynamic array. Key features include:
-- Automatic expansion when full
-- Memory safety checks
-- Stack swapping capability
-- Type-safe operations (for integers)
+**File:** `stack.h`  
+**Author:** [Your Name]  
+**Date:** [Current Date]  
+**Version:** 1.0
 
-## Constants
+## Data Structures
 
-- `STACK_INIT_CAPACITY` (4): Default initial capacity
-- `STACK_EXPAND_FACTOR` (2): Expansion multiplier when stack is full
-- `STACK_EMPTY_VALUE` (-1): Return value when stack is empty
+### StackNode
+```c
+typedef struct StackNode {
+    int data;               ///< Data stored in the node
+    struct StackNode* next; ///< Pointer to the next node
+} StackNode;
+```
+- **Purpose:** Represents individual elements in the stack
+- **Memory:** Each node occupies `sizeof(int) + sizeof(pointer)` bytes
+
+### Stack
+```c
+typedef struct {
+    StackNode* top;  ///< Pointer to the top node of the stack
+    int size;        ///< Current number of elements in the stack
+} Stack;
+```
+- **Purpose:** Main stack container holding metadata
+- **Memory:** Fixed size of `sizeof(pointer) + sizeof(int)`
 
 ## API Reference
 
-### stack_create
+### Basic Operations
 
-Creates a new stack with specified initial capacity.
-
-**Parameters:**
-- `initCapacity`: Initial capacity (uses default if ≤0)
-
-**Returns:**
-- Pointer to new stack, or NULL on failure
-
-**Example:**
+#### `stack_create()`
 ```c
-Stack *s = stack_create(10);  // Create stack with capacity 10
-if (!s) {
-    printf("Stack creation failed\n");
-    return;
-}
-// ... use stack ...
-stack_destroy(s);
+Stack* stack_create();
 ```
+- **Description:** Initializes a new empty stack
+- **Time Complexity:** O(1)
+- **Space Complexity:** O(1)
+- **Returns:** Pointer to newly created stack
+- **Notes:** Caller must free with `stack_free()`
 
-### stack_destroy
-
-Destroys a stack and frees its memory.
-
-**Parameters:**
-- `stack`: Stack pointer (safe to pass NULL)
-
-**Example:**
+#### `stack_push()`
 ```c
-Stack *s = stack_create(0);
-// ... use stack ...
-stack_destroy(s);  // Proper cleanup
-s = NULL;          // Good practice after destruction
+void stack_push(Stack* s, int item);
 ```
+- **Description:** Pushes an item onto the stack
+- **Time Complexity:** O(1)
+- **Space Complexity:** O(1) per operation (amortized)
+- **Parameters:**
+  - `s`: Stack pointer
+  - `item`: Integer value to push
+- **Error Handling:** Terminates on memory allocation failure
 
-### stack_isEmpty
-
-Checks if a stack is empty.
-
-**Parameters:**
-- `stack`: Stack pointer to check
-
-**Returns:**
-- `true` if stack is empty or NULL, `false` otherwise
-
-**Example:**
+#### `stack_pop()`
 ```c
-Stack *s = stack_create(0);
-if (stack_isEmpty(s)) {
-    printf("Stack is empty (expected)\n");
-}
-
-stack_push(s, 42);
-if (!stack_isEmpty(s)) {
-    printf("Stack is not empty (expected)\n");
-}
-stack_destroy(s);
+int stack_pop(Stack* s);
 ```
+- **Description:** Removes and returns the top item
+- **Time Complexity:** O(1)
+- **Space Complexity:** O(1)
+- **Returns:** The popped integer value
+- **Error Handling:** Terminates on empty stack
+- **Warning:** Always check `stack_isEmpty()` first in production code
 
-### stack_top
+### Accessors
 
-Returns the top element without removing it.
-
-**Parameters:**
-- `stack`: Stack pointer
-
-**Returns:**
-- Top element, or `STACK_EMPTY_VALUE` if empty/NULL
-
-**Example:**
+#### `stack_top()`
 ```c
-Stack *s = stack_create(0);
-printf("Top of empty stack: %d\n", stack_top(s));  // -1
-
-stack_push(s, 10);
-stack_push(s, 20);
-printf("Current top: %d\n", stack_top(s));  // 20
-stack_destroy(s);
+int stack_top(Stack* s);
 ```
+- **Description:** Returns the top item without removal
+- **Time Complexity:** O(1)
+- **Space Complexity:** O(1)
+- **Returns:** Top integer value
+- **Error Handling:** Terminates on empty stack
 
-### stack_push
-
-Pushes an element onto the stack.
-
-**Parameters:**
-- `stack`: Stack pointer
-- `value`: Integer value to push
-
-**Returns:**
-- `true` on success, `false` on failure (NULL or allocation failed)
-
-**Example:**
+#### `stack_size()`
 ```c
-Stack *s = stack_create(2);  // Small capacity for demonstration
-for (int i = 0; i < 5; i++) {
-    if (!stack_push(s, i*10)) {
-        printf("Push failed at i=%d\n", i);
-        break;
-    }
-    printf("Pushed: %d, size: %d, capacity: %d\n", 
-           i*10, stack_size(s), s->capacity);
-}
-stack_destroy(s);
+int stack_size(Stack* s);
 ```
+- **Description:** Returns current number of elements
+- **Time Complexity:** O(1)
+- **Space Complexity:** O(1)
+- **Returns:** Current stack size
 
-### stack_pop
-
-Removes and optionally returns the top element.
-
-**Parameters:**
-- `stack`: Stack pointer
-- `pValue`: Pointer to store popped value (can be NULL)
-
-**Returns:**
-- `true` if popped successfully, `false` if empty/NULL
-
-**Example:**
+#### `stack_isEmpty()`
 ```c
-Stack *s = stack_create(0);
-stack_push(s, 100);
-stack_push(s, 200);
-
-int val;
-while (stack_pop(s, &val)) {
-    printf("Popped: %d\n", val);
-}
-
-if (!stack_pop(s, NULL)) {
-    printf("No more elements to pop (expected)\n");
-}
-stack_destroy(s);
+bool stack_isEmpty(Stack* s);
 ```
+- **Description:** Checks if stack is empty
+- **Time Complexity:** O(1)
+- **Space Complexity:** O(1)
+- **Returns:** Boolean indicating empty state
 
-### stack_size
+### Advanced Operations
 
-Returns the number of elements in the stack.
-
-**Parameters:**
-- `stack`: Stack pointer
-
-**Returns:**
-- Number of elements (0 if NULL or empty)
-
-**Example:**
+#### `stack_swap()`
 ```c
-Stack *s = stack_create(0);
-printf("Initial size: %d\n", stack_size(s));  // 0
-
-for (int i = 1; i <= 3; i++) {
-    stack_push(s, i);
-    printf("Size after push %d: %d\n", i, stack_size(s));
-}
-stack_destroy(s);
+void stack_swap(Stack* s1, Stack* s2);
 ```
+- **Description:** Efficiently swaps contents of two stacks
+- **Time Complexity:** O(1)
+- **Space Complexity:** O(1)
+- **Parameters:** Two stack pointers to swap
+- **Note:** Only pointer/size metadata is swapped
 
-### stack_swap
+### Memory Management
 
-Swaps the contents of two stacks efficiently.
-
-**Parameters:**
-- `a`: First stack pointer
-- `b`: Second stack pointer
-
-**Note:**
-- Works even if stacks have different capacities
-- Does nothing if either pointer is NULL
-
-**Example:**
+#### `stack_free()`
 ```c
-Stack *a = stack_create(0);
-Stack *b = stack_create(100);  // Different capacities
-
-stack_push(a, 1);
-stack_push(a, 2);
-stack_push(b, 99);
-
-printf("Before swap - A top: %d, B top: %d\n", stack_top(a), stack_top(b));
-stack_swap(a, b);
-printf("After swap - A top: %d, B top: %d\n", stack_top(a), stack_top(b));
-
-stack_destroy(a);
-stack_destroy(b);
+void stack_free(Stack* s);
 ```
+- **Description:** Releases all stack memory
+- **Time Complexity:** O(n) where n is stack size
+- **Space Complexity:** O(1)
+- **Parameters:** Stack pointer to free
+- **Postcondition:** Stack pointer becomes invalid
 
-## Usage Notes
+## Complexity Summary
 
-1. Always check return values from `stack_create` and `stack_push`
-2. Set stack pointers to NULL after destruction
-3. The stack is not thread-safe
-4. For production use, consider adding error logging
-5. The implementation uses `static` linkage - include the header in only one source file or remove `static` for multi-file use
+| Operation      | Time Complexity | Space Complexity |
+|---------------|-----------------|------------------|
+| create        | O(1)            | O(1)             |
+| push          | O(1)            | O(1) per op      |
+| pop           | O(1)            | O(1)             |
+| top           | O(1)            | O(1)             |
+| size          | O(1)            | O(1)             |
+| isEmpty       | O(1)            | O(1)             |
+| swap          | O(1)            | O(1)             |
+| free          | O(n)            | O(1)             |
 
-## Memory Management
+## Memory Usage
+- **Per Stack:** Constant overhead (pointer + int)
+- **Per Element:** sizeof(StackNode) = sizeof(int) + sizeof(pointer)
+- **Total Memory:** ~(n * (sizeof(int) + sizeof(pointer)) + constant
 
-The stack automatically expands when full (by `STACK_EXPAND_FACTOR`), but never shrinks. Manual capacity management can be added if needed.
+## Best Practices
+1. Always check `stack_isEmpty()` before `pop()` or `top()`
+2. Balance every `stack_create()` with a `stack_free()`
+3. Use `stack_swap()` instead of manual element transfer when possible
+4. For time-critical sections, prefer `stack_size()` over repeated `stack_isEmpty()` checks
 
-## Error Handling
+## Limitations
+1. Not thread-safe (requires external synchronization for concurrent access)
+2. Fixed to `int` data type (can be modified for other types)
+3. Error handling terminates program (may want to modify for library use)
 
-Functions return boolean success/failure or special values (like `STACK_EMPTY_VALUE`) rather than using assertions or exceptions.
+## Example Usage
+See the example in the header file comments for complete demonstration of all operations.
