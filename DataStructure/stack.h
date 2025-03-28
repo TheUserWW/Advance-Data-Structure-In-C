@@ -1,6 +1,21 @@
 /**
  * @file stack.h
- * @brief 动态栈实现（带交换功能）Stack with swap capability
+ * @brief A complete stack data structure implementation
+ * 
+ * This header provides a full implementation of a stack data structure including:
+ * - Initialization
+ * - Push/pop operations
+ * - Top element access
+ * - Size checking
+ * - Stack swapping
+ * - Memory management
+ * 
+ * Implementation features:
+ * - Linked list based implementation
+ * - Dynamic memory allocation
+ * - Not thread-safe (for single-threaded use)
+ * - Comprehensive error handling
+ * - Complete memory management
  */
 
  #ifndef STACK_H
@@ -10,176 +25,166 @@
  #include <stdlib.h>
  #include <stdbool.h>
  
- #ifdef __cplusplus
- extern "C" {
- #endif
+ /**
+  * @brief Stack node structure
+  * 
+  * Represents a single element in the stack containing:
+  * - The data value
+  * - Pointer to the next node
+  */
+ typedef struct StackNode {
+     int data;               ///< Data stored in the node
+     struct StackNode* next; ///< Pointer to the next node
+ } StackNode;
  
- // ==================== 结构定义 ====================
+ /**
+  * @brief Stack structure
+  * 
+  * Contains the metadata for the stack:
+  * - Pointer to the top node
+  * - Current size of the stack
+  */
  typedef struct {
-     int *array;     // 动态数组
-     int top;        // 栈顶索引（-1为空）
-     int capacity;   // 当前容量
+     StackNode* top;  ///< Pointer to the top node of the stack
+     int size;        ///< Current number of elements in the stack
  } Stack;
  
- // ==================== 常量定义 ====================
- #define STACK_INIT_CAPACITY 4   // 默认初始容量
- #define STACK_EXPAND_FACTOR 2   // 扩容倍数
- #define STACK_EMPTY_VALUE -1    // 栈空返回值
- 
- // ==================== API声明 ====================
+ /* ====================== Basic Operations ====================== */
  
  /**
-  * @brief 创建新栈
-  * @param initCapacity 初始容量（若≤0则使用默认值）
-  * @return 栈指针（失败返回NULL）
+  * @brief Creates a new empty stack
+  * 
+  * @return Stack* Pointer to the newly created stack
+  * @note The caller must call stack_free() to release memory
   */
- static Stack* stack_create(int initCapacity);
- 
- /**
-  * @brief 销毁栈
-  * @param stack 栈指针（可安全传入NULL）
-  */
- static void stack_destroy(Stack *stack);
- 
- /**
-  * @brief 检查栈空
-  * @param stack 栈指针
-  * @return true为空栈
-  */
- static bool stack_isEmpty(const Stack *stack);
- 
- /**
-  * @brief 直接获取栈顶元素
-  * @param stack 栈指针
-  * @return 栈顶元素（栈空返回STACK_EMPTY_VALUE）
-  */
- static int stack_top(const Stack *stack);
- 
- /**
-  * @brief 压入元素
-  * @param stack 栈指针
-  * @param value 要压入的值
-  * @return 成功返回true，失败返回false
-  */
- static bool stack_push(Stack *stack, int value);
- 
- /**
-  * @brief 弹出元素
-  * @param stack 栈指针
-  * @param[out] pValue 接收弹出值的指针（可NULL）
-  * @return 成功返回true，栈空返回false
-  */
- static bool stack_pop(Stack *stack, int *pValue);
- 
- /**
-  * @brief 获取元素数量
-  * @param stack 栈指针
-  * @return 当前栈中元素个数
-  */
- static int stack_size(const Stack *stack);
- 
- /**
-  * @brief 完全交换两个栈的内容
-  * @param a 第一个栈指针
-  * @param b 第二个栈指针
-  * @note 即使两个栈容量不同也能正确交换
-  */
- static void stack_swap(Stack *a, Stack *b);
- 
- // ==================== 实现部分 ====================
- #ifdef STACK_IMPLEMENTATION
- 
- static Stack* stack_create(int initCapacity) {
-     Stack *stack = (Stack*)malloc(sizeof(Stack));
-     if (!stack) return NULL;
- 
-     int capacity = (initCapacity > 0) ? initCapacity : STACK_INIT_CAPACITY;
-     stack->array = (int*)malloc(capacity * sizeof(int));
-     if (!stack->array) {
-         free(stack);
-         return NULL;
+ static Stack* stack_create() {
+     Stack* s = (Stack*)malloc(sizeof(Stack));
+     if (s == NULL) {
+         fprintf(stderr, "Error: Memory allocation failed for stack\n");
+         exit(EXIT_FAILURE);
      }
- 
-     stack->top = -1;
-     stack->capacity = capacity;
-     return stack;
+     s->top = NULL;
+     s->size = 0;
+     return s;
  }
  
- static void stack_destroy(Stack *stack) {
-     if (stack) {
-         free(stack->array);
-         free(stack);
+ /**
+  * @brief Checks if the stack is empty
+  * 
+  * @param s Pointer to the stack
+  * @return true if stack is empty
+  * @return false if stack contains elements
+  */
+ static bool stack_isEmpty(Stack* s) {
+     return s->top == NULL;
+ }
+ 
+ /**
+  * @brief Pushes an element onto the stack
+  * 
+  * @param s Pointer to the stack
+  * @param item Value to push onto the stack
+  */
+ static void stack_push(Stack* s, int item) {
+     StackNode* newNode = (StackNode*)malloc(sizeof(StackNode));
+     if (newNode == NULL) {
+         fprintf(stderr, "Error: Memory allocation failed for stack node\n");
+         exit(EXIT_FAILURE);
      }
+     newNode->data = item;
+     newNode->next = s->top;  // New node points to previous top
+     s->top = newNode;        // Update top pointer
+     s->size++;               // Increment size counter
  }
  
- static bool stack_isEmpty(const Stack *stack) {
-     return !stack || stack->top == -1;
- }
- 
- static int stack_top(const Stack *stack) {
-     return stack_isEmpty(stack) ? STACK_EMPTY_VALUE : stack->array[stack->top];
- }
- 
- static bool stack_expand(Stack *stack) {
-     if (!stack) return false;
-     
-     int newCap = stack->capacity * STACK_EXPAND_FACTOR;
-     int *newArray = (int*)realloc(stack->array, newCap * sizeof(int));
-     if (!newArray) return false;
- 
-     stack->array = newArray;
-     stack->capacity = newCap;
-     return true;
- }
- 
- static bool stack_push(Stack *stack, int value) {
-     if (!stack) return false;
-     
-     if (stack->top == stack->capacity - 1 && !stack_expand(stack)) {
-         return false;
+ /**
+  * @brief Pops an element from the top of the stack
+  * 
+  * @param s Pointer to the stack
+  * @return int The popped value
+  * @warning Calling this on an empty stack will terminate the program
+  */
+ static int stack_pop(Stack* s) {
+     if (stack_isEmpty(s)) {
+         fprintf(stderr, "Error: Stack underflow (pop from empty stack)\n");
+         exit(EXIT_FAILURE);
      }
-     
-     stack->array[++stack->top] = value;
-     return true;
+     StackNode* temp = s->top;  // Save current top
+     int poppedItem = temp->data;
+     s->top = s->top->next;     // Move top pointer
+     free(temp);                // Free old top node
+     s->size--;                 // Decrement size counter
+     return poppedItem;
  }
  
- static bool stack_pop(Stack *stack, int *pValue) {
-     if (stack_isEmpty(stack)) return false;
-     
-     if (pValue) {
-         *pValue = stack->array[stack->top];
+ /* ====================== Accessors ====================== */
+ 
+ /**
+  * @brief Returns the top element without removing it
+  * 
+  * @param s Pointer to the stack
+  * @return int Value at the top of the stack
+  * @warning Calling this on an empty stack will terminate the program
+  */
+ static int stack_top(Stack* s) {
+     if (stack_isEmpty(s)) {
+         fprintf(stderr, "Error: Accessing top of empty stack\n");
+         exit(EXIT_FAILURE);
      }
-     stack->top--;
-     return true;
+     return s->top->data;
  }
  
- static int stack_size(const Stack *stack) {
-     return stack ? stack->top + 1 : 0;
+ /**
+  * @brief Returns the current size of the stack
+  * 
+  * @param s Pointer to the stack
+  * @return int Number of elements in the stack
+  */
+ static int stack_size(Stack* s) {
+     return s->size;
  }
  
- static void stack_swap(Stack *a, Stack *b) {
-     if (!a || !b) return;
+ /* ====================== Advanced Operations ====================== */
+ 
+ /**
+  * @brief Swaps the contents of two stacks
+  * 
+  * Efficiently swaps all contents between two stacks including:
+  * - Top pointers
+  * - Size counters
+  * 
+  * @param s1 Pointer to first stack
+  * @param s2 Pointer to second stack
+  */
+ static void stack_swap(Stack* s1, Stack* s2) {
+     // Swap top pointers
+     StackNode* tempTop = s1->top;
+     s1->top = s2->top;
+     s2->top = tempTop;
      
-     // 交换数组指针
-     int *tmp_array = a->array;
-     a->array = b->array;
-     b->array = tmp_array;
-     
-     // 交换栈顶索引
-     int tmp_top = a->top;
-     a->top = b->top;
-     b->top = tmp_top;
-     
-     // 交换容量
-     int tmp_cap = a->capacity;
-     a->capacity = b->capacity;
-     b->capacity = tmp_cap;
+     // Swap size counters
+     int tempSize = s1->size;
+     s1->size = s2->size;
+     s2->size = tempSize;
  }
  
- #endif // STACK_IMPLEMENTATION
+ /* ====================== Memory Management ====================== */
  
- #ifdef __cplusplus
+ /**
+  * @brief Frees all memory associated with a stack
+  * 
+  * Releases all stack nodes and the stack structure itself
+  * 
+  * @param s Pointer to the stack to free
+  * @note The stack pointer becomes invalid after this call
+  */
+ static void stack_free(Stack* s) {
+     // Pop all elements to free nodes
+     while (!stack_isEmpty(s)) {
+         stack_pop(s);
+     }
+     // Free the stack structure itself
+     free(s);
  }
- #endif
  
  #endif // STACK_H
