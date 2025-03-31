@@ -1,9 +1,13 @@
 # Ultra-Extension-For-C-language
-I add some useful data structure (e.g. : quque , stack , hashset...) and algorithm (bsearch .....) to make coding in c mush easlier.
+The standard C language doesn't provide enough data structure and algorithm templates. So, I add some useful  templates in C language, which makes you programming more efficient and pleasant.
 
-##There are have some useful data structure AVALIABLE
+All of thing are based on std C, so you don't need extra library to support those thing.
+## Available data structure templates:
+**HashMap**
+**HashSet**
+**Stack**
+**Queue**
+**Priority** **Queue** 
 
-HashSet
-Stack
-Queue
-Pirority Queue
+## Available algorithm lib: 
+**find.h**
