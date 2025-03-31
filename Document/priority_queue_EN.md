@@ -1,181 +1,198 @@
-# Priority Queue (Min-Heap) Documentation
+# **Priority Queue (Min-Heap) Implementation Documentation**
 
-## Overview
+---
 
-This header file provides a priority queue implementation in C using a min-heap data structure. The priority queue allows efficient access to the smallest element (front) and maintains optimized access to the largest element (back).
+## **1. Introduction**
+This document describes the implementation of a **priority queue** based on a **min-heap**. This priority queue efficiently supports insertion (`push`), deletion (`pop`), and retrieval of the minimum (`front`) and maximum (`back`) elements.
 
-## Features
+---
 
-- **Min-Heap Implementation**: Always provides O(1) access to the smallest element
-- **Efficient Operations**: Insertion and extraction in O(log n) time
-- **Dual-End Access**: Quick access to both smallest (front) and largest (back) elements
-- **Dynamic Size**: Automatically handles queue capacity
-- **Type Safety**: Currently supports integer values
+## **2. Data Structure**
+The priority queue is implemented using a **binary min-heap**, where:
+- The smallest element is always at the root node (`heap[1]`)
+- The value of each parent node ≤ the values of its child nodes
+- The heap is stored in an array starting from index `1` for easier parent-child node calculations
 
-## Data Structure
+---
 
+## **3. Function Descriptions**
+
+### **3.1 `pq_create()` - Create a Priority Queue**
+**Function**:  
+Allocates memory to create a new empty priority queue with an initial capacity of `0`.  
+**Time Complexity**: \(O(1)\)  
+**Space Complexity**: \(O(1)\)  
+
+**Example**:
 ```c
-typedef struct {
-    int *heap;          // Array to store heap elements (1-based indexing)
-    int capacity;       // Maximum number of elements
-    int count;          // Current number of elements
-    int max_leaf;       // Cache of the maximum leaf value (for pq_back)
-} PriorityQueue;
+PriorityQueue *pq = pq_create();  // Creates an empty priority queue
 ```
 
-## API Reference
+---
 
-### Creation and Destruction
+### **3.2 `pq_free(PriorityQueue *pq)` - Free Memory**
+**Function**:  
+Releases the memory occupied by the heap array and the priority queue structure.  
+**Time Complexity**: \(O(1)\)  
+**Space Complexity**: \(O(1)\)  
 
-#### `pq_create`
+**Example**:
 ```c
-PriorityQueue* pq_create(int max_size);
+pq_free(pq);  // Releases all memory used by the priority queue
 ```
-Creates a new priority queue with specified capacity.
 
-**Parameters:**
-- `max_size`: Maximum number of elements the queue can hold
+---
 
-**Returns:**
-- Pointer to newly created PriorityQueue
-- NULL on allocation failure
+### **3.3 `pq_swap(int *a, int *b)` - Swap Two Elements**
+**Function**:  
+A helper function to swap two integer values.  
+**Time Complexity**: \(O(1)\)  
+**Space Complexity**: \(O(1)\)  
 
-#### `pq_free`
+**Example**:
 ```c
-void pq_free(PriorityQueue *pq);
+int x = 5, y = 10;
+pq_swap(&x, &y);  // After swapping, x=10, y=5
 ```
-Releases all resources associated with the priority queue.
 
-**Parameters:**
-- `pq`: Pointer to the priority queue to destroy
+---
 
-### Capacity Operations
+### **3.4 `pq_swim(PriorityQueue *pq, int k)` - Swim Operation**
+**Function**:  
+Moves an element upward to maintain the min-heap property.  
+**Time Complexity**: \(O(\log n)\) (worst-case: moves from a leaf node to the root)  
+**Space Complexity**: \(O(1)\)  
 
-#### `pq_empty`
+**Example**:
 ```c
-bool pq_empty(PriorityQueue *pq);
+pq_push(pq, 3);  // If 3 is smaller than its parent, it swims up
 ```
-Checks if the priority queue is empty.
 
-**Returns:**
-- true if queue is empty
-- false otherwise
+---
 
-#### `pq_full`
+### **3.5 `pq_sink(PriorityQueue *pq, int k)` - Sink Operation**
+**Function**:  
+Moves an element downward to maintain the min-heap property.  
+**Time Complexity**: \(O(\log n)\) (worst-case: moves from the root to a leaf node)  
+**Space Complexity**: \(O(1)\)  
+
+**Example**:
 ```c
-bool pq_full(PriorityQueue *pq);
+pq_pop(pq);  // After swapping the root with the last element, the new root sinks down
 ```
-Checks if the priority queue is full.
 
-**Returns:**
-- true if queue is at capacity
-- false otherwise
+---
 
-#### `pq_size`
+### **3.6 `pq_empty(PriorityQueue *pq)` - Check if Empty**
+**Function**:  
+Determines whether the priority queue is empty.  
+**Time Complexity**: \(O(1)\)  
+**Space Complexity**: \(O(1)\)  
+
+**Example**:
 ```c
-int pq_size(PriorityQueue *pq);
+if (pq_empty(pq)) printf("Queue is empty!\n");
 ```
-Returns the current number of elements in the queue.
 
-### Element Access
+---
 
-#### `pq_front`
+### **3.7 `pq_push(PriorityQueue *pq, int value)` - Insert Element**
+**Function**:  
+Inserts a new element into the priority queue and adjusts the heap structure.
+- If the heap is full, **doubles** the capacity (using `realloc`)
+- Then performs a **swim** operation to maintain the heap property
+
+**Time Complexity**:
+- Average: \(O(\log n)\) (swim operation)
+- Worst-case (during expansion): \(O(n)\)
+
+**Space Complexity**:
+- Amortized \(O(1)\) (due to doubling strategy)
+
+**Example**:
 ```c
-int pq_front(PriorityQueue *pq);
+pq_push(pq, 10);  // Inserts 10 into the heap
+pq_push(pq, 5);   // Inserts 5, which may swim up
 ```
-Access the smallest element (top of min-heap).
 
-**Returns:**
-- Value of smallest element
-- INT_MAX if queue is empty
+---
 
-#### `pq_back`
+### **3.8 `pq_front(PriorityQueue *pq)` - Get Minimum Element**
+**Function**:  
+Returns the smallest element (the root of the min-heap).  
+**Time Complexity**: \(O(1)\)  
+**Space Complexity**: \(O(1)\)  
+
+**Example**:
 ```c
-int pq_back(PriorityQueue *pq);
+int min_val = pq_front(pq);  // Retrieves the smallest element
 ```
-Access the largest element in the queue.
 
-**Returns:**
-- Value of largest element
-- INT_MIN if queue is empty
+---
 
-### Modifiers
+### **3.9 `pq_back(PriorityQueue *pq)` - Get Maximum Element**
+**Function**:  
+Finds the largest element (which must be in a leaf node).  
+**Time Complexity**: \(O(n)\) (scans all leaf nodes in the worst case)  
+**Space Complexity**: \(O(1)\)  
 
-#### `pq_push`
+**Example**:
 ```c
-void pq_push(PriorityQueue *pq, int value);
+int max_val = pq_back(pq);  // Retrieves the largest element in the heap
 ```
-Inserts a new element into the priority queue.
 
-**Parameters:**
-- `value`: Integer value to insert
+---
 
-**Notes:**
-- Prints error message if queue is full
-- Maintains heap property after insertion
-
-#### `pq_pop`
-```c
-int pq_pop(PriorityQueue *pq);
-```
+### **3.10 `pq_pop(PriorityQueue *pq)` - Remove Minimum Element**
+**Function**:  
 Removes and returns the smallest element.
+- Swaps the root node with the last element
+- Performs a **sink** operation to restore the heap property
+- If the heap becomes too sparse, **halves** the capacity (using `realloc`)
 
-**Returns:**
-- Value of smallest element
-- INT_MAX if queue is empty
+**Time Complexity**:
+- Average: \(O(\log n)\) (sink operation)
+- Worst-case (during contraction): \(O(n)\)
 
-## Usage Example
+**Space Complexity**:
+- Amortized \(O(1)\) (due to halving strategy)
 
+**Example**:
 ```c
-#include "priority_queue.h"
-#include <stdio.h>
-
-int main() {
-    // Create priority queue with capacity 10
-    PriorityQueue *pq = pq_create(10);
-    
-    // Insert elements
-    pq_push(pq, 5);
-    pq_push(pq, 3);
-    pq_push(pq, 8);
-    pq_push(pq, 1);
-    pq_push(pq, 4);
-    
-    // Access elements
-    printf("Front (min): %d\n", pq_front(pq));  // Output: 1
-    printf("Back (max): %d\n", pq_back(pq));     // Output: 8
-    
-    // Process all elements
-    while (!pq_empty(pq)) {
-        printf("%d ", pq_pop(pq));
-    }
-    // Output: 1 3 4 5 8
-    
-    // Clean up
-    pq_free(pq);
-    return 0;
-}
+int min_val = pq_pop(pq);  // Removes and returns the smallest element
 ```
 
-## Performance Characteristics
+---
 
-| Operation    | Time Complexity | Notes                          |
-|--------------|-----------------|--------------------------------|
-| pq_create    | O(1)            | Single allocation             |
-| pq_free      | O(1)            | Single deallocation           |
-| pq_push      | O(log n)        | Heap insertion                |
-| pq_pop       | O(log n)        | Heap extraction               |
-| pq_front     | O(1)            | Direct access to root         |
-| pq_back      | O(1) amortized  | Maintained during operations   |
-| pq_empty     | O(1)            | Count comparison              |
-| pq_full      | O(1)            | Count comparison              |
+### **3.11 `pq_size(PriorityQueue *pq)` - Get Element Count**
+**Function**:  
+Returns the number of elements in the priority queue.  
+**Time Complexity**: \(O(1)\)  
+**Space Complexity**: \(O(1)\)  
 
-## Notes
+**Example**:
+```c
+int size = pq_size(pq);  // Gets the current number of elements
+```
 
-1. The implementation uses 1-based indexing for easier parent/child calculations
-2. Error conditions return INT_MAX/INT_MIN and print to stderr
-3. For production use, consider:
-   - Adding error codes instead of printing
-   - Making it generic with void pointers
-   - Adding resize capability
-4. The max_leaf optimization provides O(1) access to the largest element while maintaining O(log n) insertion time
+---
+
+## **4. Time Complexity Summary**
+| Operation | Average Case | Worst Case |
+|-----------|-------------|------------|
+| `pq_create()` | \(O(1)\) | \(O(1)\) |
+| `pq_free()` | \(O(1)\) | \(O(1)\) |
+| `pq_push()` | \(O(\log n)\) | \(O(n)\) (during expansion) |
+| `pq_pop()` | \(O(\log n)\) | \(O(n)\) (during contraction) |
+| `pq_front()` | \(O(1)\) | \(O(1)\) |
+| `pq_back()` | \(O(n)\) | \(O(n)\) |
+| `pq_empty()` | \(O(1)\) | \(O(1)\) |
+| `pq_size()` | \(O(1)\) | \(O(1)\) |
+
+---
+
+## **5. Conclusion**
+This implementation provides an efficient **min-heap-based priority queue** with:
+- Fast insertion and deletion operations (average `O(log n)`)
+- Automatic capacity adjustment (amortized `O(1)` space per insertion)
+- Convenient access to the minimum (`O(1)`) and maximum (`O(n)`) elements
