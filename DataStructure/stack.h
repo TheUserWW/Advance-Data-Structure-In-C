@@ -1,21 +1,9 @@
 /**
  * @file stack.h
- * @brief A complete stack data structure implementation
+ * @brief A generic stack data structure implementation using void pointers
  * 
- * This header provides a full implementation of a stack data structure including:
- * - Initialization
- * - Push/pop operations
- * - Top element access
- * - Size checking
- * - Stack swapping
- * - Memory management
- * 
- * Implementation features:
- * - Linked list based implementation
- * - Dynamic memory allocation
- * - Not thread-safe (for single-threaded use)
- * - Comprehensive error handling
- * - Complete memory management
+ * This header provides a generic implementation of a stack that can store
+ * any data type by using void pointers.
  */
 
  #ifndef STACK_H
@@ -29,12 +17,12 @@
   * @brief Stack node structure
   * 
   * Represents a single element in the stack containing:
-  * - The data value
+  * - The data as a void pointer
   * - Pointer to the next node
   */
  typedef struct StackNode {
-     int data;               ///< Data stored in the node
-     struct StackNode* next; ///< Pointer to the next node
+     void* data;               ///< Generic data pointer
+     struct StackNode* next;   ///< Pointer to the next node
  } StackNode;
  
  /**
@@ -83,9 +71,10 @@
   * @brief Pushes an element onto the stack
   * 
   * @param s Pointer to the stack
-  * @param item Value to push onto the stack
+  * @param item Pointer to the data to push onto the stack
+  * @note The stack only stores the pointer, not the data itself
   */
- static void stack_push(Stack* s, int item) {
+ static void stack_push(Stack* s, void* item) {
      StackNode* newNode = (StackNode*)malloc(sizeof(StackNode));
      if (newNode == NULL) {
          fprintf(stderr, "Error: Memory allocation failed for stack node\n");
@@ -101,16 +90,17 @@
   * @brief Pops an element from the top of the stack
   * 
   * @param s Pointer to the stack
-  * @return int The popped value
+  * @return void* The pointer to the popped data
   * @warning Calling this on an empty stack will terminate the program
+  * @note The caller is responsible for managing the memory of the returned data
   */
- static int stack_pop(Stack* s) {
+ static void* stack_pop(Stack* s) {
      if (stack_isEmpty(s)) {
          fprintf(stderr, "Error: Stack underflow (pop from empty stack)\n");
          exit(EXIT_FAILURE);
      }
      StackNode* temp = s->top;  // Save current top
-     int poppedItem = temp->data;
+     void* poppedItem = temp->data;
      s->top = s->top->next;     // Move top pointer
      free(temp);                // Free old top node
      s->size--;                 // Decrement size counter
@@ -123,10 +113,10 @@
   * @brief Returns the top element without removing it
   * 
   * @param s Pointer to the stack
-  * @return int Value at the top of the stack
+  * @return void* Pointer to the data at the top of the stack
   * @warning Calling this on an empty stack will terminate the program
   */
- static int stack_top(Stack* s) {
+ static void* stack_top(Stack* s) {
      if (stack_isEmpty(s)) {
          fprintf(stderr, "Error: Accessing top of empty stack\n");
          exit(EXIT_FAILURE);
@@ -149,10 +139,6 @@
  /**
   * @brief Swaps the contents of two stacks
   * 
-  * Efficiently swaps all contents between two stacks including:
-  * - Top pointers
-  * - Size counters
-  * 
   * @param s1 Pointer to first stack
   * @param s2 Pointer to second stack
   */
@@ -173,7 +159,8 @@
  /**
   * @brief Frees all memory associated with a stack
   * 
-  * Releases all stack nodes and the stack structure itself
+  * Releases all stack nodes but not the data they point to.
+  * The stack structure itself is also freed.
   * 
   * @param s Pointer to the stack to free
   * @note The stack pointer becomes invalid after this call
@@ -182,6 +169,25 @@
      // Pop all elements to free nodes
      while (!stack_isEmpty(s)) {
          stack_pop(s);
+     }
+     // Free the stack structure itself
+     free(s);
+ }
+ 
+ /**
+  * @brief Frees all memory associated with a stack including the data
+  * 
+  * Releases all stack nodes and the data they point to.
+  * The stack structure itself is also freed.
+  * 
+  * @param s Pointer to the stack to free
+  * @note The stack pointer becomes invalid after this call
+  */
+ static void stack_free_all(Stack* s) {
+     // Pop all elements and free their data
+     while (!stack_isEmpty(s)) {
+         void* data = stack_pop(s);
+         free(data);
      }
      // Free the stack structure itself
      free(s);
